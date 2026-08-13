@@ -69,24 +69,25 @@ export default function Integrations({ driver }: { driver: DriverCtx }) {
     setSyncMsg('Sincronizando viajes...');
     try {
       const res = await dbFetch(
-        `driver_assignments?driver_id=eq.${driver.driverId}&assignment_status=eq.pending` +
+        `driver_assignments?driver_id=eq.${driver.driverId}` +
         '&select=reservation(id,pickup_datetime,dropoff_datetime,pickup_location,dropoff_location,pax,guest_name)&limit=50'
       );
       const assignments = await res.json();
+      if (!Array.isArray(assignments)) throw new Error('No se pudieron cargar los viajes');
       let synced = 0;
       for (const a of assignments) {
         if (!a.reservation) continue;
         const r = a.reservation;
-        await supabase.functions.invoke('calendar-create-event', {
+        const { error } = await supabase.functions.invoke('calendar-create-event', {
           body: {
             driver_id: driver.driverId,
             title: `Viaje: ${r.pickup_location.split(',')[0]} → ${r.dropoff_location?.split(',')[0] || ''}`,
             start: r.pickup_datetime,
-            end: r.pickup_datetime, // fallback
+            end: r.pickup_datetime,
             description: `Pasajero: ${r.guest_name || '—'}\nRecogida: ${r.pickup_location}\nDestino: ${r.dropoff_location}`,
           },
         });
-        synced++;
+        if (!error) synced++;
       }
       setSyncMsg(`${synced} viajes sincronizados con Google Calendar`);
     } catch (e: any) {
