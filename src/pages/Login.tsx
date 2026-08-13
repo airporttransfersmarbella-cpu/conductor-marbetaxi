@@ -1,10 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Car } from 'lucide-react';
+import { Car, Download } from 'lucide-react';
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [installed, setInstalled] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: any) => { e.preventDefault(); setInstallPrompt(e); };
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', () => setInstalled(true));
+    if (window.matchMedia('(display-mode: standalone)').matches) setInstalled(true);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  async function handleInstall() {
+    if (installPrompt) {
+      installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      if (outcome === 'accepted') setInstalled(true);
+    } else {
+      window.open('https://conductor.gestcab.com', '_blank');
+    }
+  }
 
   async function loginWithGoogle() {
     setError('');
@@ -65,6 +85,23 @@ export default function Login() {
             : <GoogleIcon />}
           {loading ? 'Conectando...' : 'Iniciar sesión con Google'}
         </button>
+
+        {!installed && (
+          <button
+            onClick={handleInstall}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
+              width: '100%', padding: '0.9rem 1.25rem',
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white',
+              border: 'none', borderRadius: 12,
+              fontSize: '1rem', fontWeight: 600, cursor: 'pointer',
+              boxShadow: '0 2px 16px rgba(99,102,241,0.4)',
+            }}
+          >
+            <Download size={20} />
+            Instalar App
+          </button>
+        )}
 
         {error && <p style={{ color: '#f87171', fontSize: '0.85rem', textAlign: 'center', margin: 0 }}>{error}</p>}
       </div>
