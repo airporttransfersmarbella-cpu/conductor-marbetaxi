@@ -27,15 +27,14 @@ export default function Integrations({ driver }: { driver: DriverCtx }) {
   const [email, setEmail]                   = useState('');
 
   useEffect(() => {
-    // Check if google tokens exist for this driver
-    dbFetch(`app_settings?key=eq.driver_google_tokens_${driver.driverId}&select=value`).then(async res => {
-      const rows = await res.json();
-      if (rows?.[0]?.value?.access_token) setCalendarLinked(true);
-    });
-
-    // Get user email
-    supabase.auth.getUser().then(({ data }) => {
-      setEmail(data.user?.email || '');
+    supabase.auth.getUser().then(({ data: userData }) => {
+      const userEmail = userData.user?.email || '';
+      setEmail(userEmail);
+      // Check if google integration exists for this user
+      dbFetch(`google_integrations?user_id=eq.${userData.user?.id}&select=is_active`).then(async res => {
+        const rows = await res.json();
+        if (rows?.[0]?.is_active) setCalendarLinked(true);
+      });
     });
 
     // Handle OAuth callback
@@ -53,22 +52,9 @@ export default function Integrations({ driver }: { driver: DriverCtx }) {
     setSyncMsg('Conectando con Google Calendar...');
     try {
       const { data, error } = await supabase.functions.invoke('oauth-google', {
-        body: { code, redirect_uri: REDIRECT_URI, driver_id: driver.driverId },
+        body: { code, redirect_uri: REDIRECT_URI },
       });
-      if (error || !data?.access_token) throw new Error('Error al conectar');
-      // Store tokens for driver
-      await dbFetch(`app_settings?key=eq.driver_google_tokens_${driver.driverId}`, {
-        method: 'DELETE',
-      });
-      await dbFetch('app_settings', {
-        method: 'POST',
-        headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify({
-          key: `driver_google_tokens_${driver.driverId}`,
-          value: data,
-          description: `Google Calendar tokens for driver ${driver.driverId}`,
-        }),
-      });
+      if (error || !data?.success) throw new Error(data?.error || 'Error al conectar');
       setCalendarLinked(true);
       setSyncMsg('¡Google Calendar conectado!');
     } catch (e: any) {
@@ -111,7 +97,8 @@ export default function Integrations({ driver }: { driver: DriverCtx }) {
   }
 
   async function disconnect() {
-    await dbFetch(`app_settings?key=eq.driver_google_tokens_${driver.driverId}`, { method: 'DELETE' });
+    const { data: userData } = await supabase.auth.getUser();
+    await dbFetch(`google_integrations?user_id=eq.${userData.user?.id}`, { method: 'DELETE' });
     setCalendarLinked(false);
     setSyncMsg('Google Calendar desconectado');
   }
