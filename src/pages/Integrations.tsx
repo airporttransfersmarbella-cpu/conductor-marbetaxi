@@ -76,16 +76,9 @@ export default function Integrations({ driver }: { driver: DriverCtx }) {
       if (!Array.isArray(assignments)) throw new Error('No se pudieron cargar los viajes');
       let synced = 0;
       for (const a of assignments) {
-        if (!a.reservation) continue;
-        const r = a.reservation;
+        if (!a.reservation?.id) continue;
         const { error } = await supabase.functions.invoke('calendar-create-event', {
-          body: {
-            driver_id: driver.driverId,
-            title: `Viaje: ${r.pickup_location.split(',')[0]} → ${r.dropoff_location?.split(',')[0] || ''}`,
-            start: r.pickup_datetime,
-            end: r.pickup_datetime,
-            description: `Pasajero: ${r.guest_name || '—'}\nRecogida: ${r.pickup_location}\nDestino: ${r.dropoff_location}`,
-          },
+          body: { reservation_id: a.reservation.id },
         });
         if (!error) synced++;
       }
