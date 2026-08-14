@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, dbFetch } from '../lib/supabase';
-import { Calendar, Link, Unlink, RefreshCw, CheckCircle, LogOut, User } from 'lucide-react';
+import { Calendar, Link, Unlink, RefreshCw, CheckCircle, LogOut, User, Trash2 } from 'lucide-react';
 import type { DriverCtx } from '../App';
 
 const GOOGLE_CLIENT_ID = '805460437524-6schok0tpra1nh5o59lagjvla01phclp.apps.googleusercontent.com';
@@ -162,8 +162,36 @@ export default function Integrations({ driver }: { driver: DriverCtx }) {
           )}
         </div>
 
+        {/* Clear cache */}
+        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: '#2a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Trash2 size={20} color="#f87171" />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0, fontWeight: 600 }}>Borrar caché</p>
+            <p style={{ margin: 0, fontSize: '0.78rem', color: '#6b7280' }}>Fuerza la actualización de la app</p>
+          </div>
+          <button
+            className="btn-ghost"
+            style={{ flexShrink: 0, color: '#f87171' }}
+            onClick={async () => {
+              if ('caches' in window) {
+                const keys = await caches.keys();
+                await Promise.all(keys.map(k => caches.delete(k)));
+              }
+              if ('serviceWorker' in navigator) {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                await Promise.all(regs.map(r => r.unregister()));
+              }
+              window.location.reload();
+            }}
+          >
+            <RefreshCw size={16} />
+          </button>
+        </div>
+
         {/* App version */}
-        <p style={{ textAlign: 'center', color: '#374151', fontSize: '0.72rem', marginTop: '1rem' }}>
+        <p style={{ textAlign: 'center', color: '#374151', fontSize: '0.72rem', marginTop: '0.5rem' }}>
           Marbetaxi Conductor v1.0 · <a href="https://gestcab.com" style={{ color: '#4b5563' }}>gestcab.com</a>
         </p>
       </div>
