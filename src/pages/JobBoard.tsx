@@ -137,10 +137,10 @@ export default function JobBoard({ driver }: { driver: DriverCtx }) {
                     <span>{r.pax} pax</span>
                   </div>
 
-                  {r.extras && r.extras.length > 0 && (
+                  {r.extras && r.extras.filter(e => e.name !== '__hide_tolls__').length > 0 && (
                     <div style={{ fontSize: '0.82rem' }}>
                       <span style={{ color: '#9ca3af' }}>Extras: </span>
-                      {r.extras.map((e, i) => (
+                      {r.extras.filter(e => e.name !== '__hide_tolls__').map((e, i) => (
                         <span key={i} style={{ color: '#e5e7eb' }}>• {e.name}{e.quantity && e.quantity > 1 ? ` ×${e.quantity}` : ''} </span>
                       ))}
                     </div>

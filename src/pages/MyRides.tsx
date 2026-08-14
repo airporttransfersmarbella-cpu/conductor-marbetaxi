@@ -94,10 +94,10 @@ function RideCard({ a }: { a: Assignment }) {
           )}
           {r.return_datetime && <p style={{ margin: 0 }}>↩ Vuelta: {fmtDate(r.return_datetime)}</p>}
           {r.notes && <p style={{ margin: 0, color: '#9ca3af', fontStyle: 'italic' }}>📝 {r.notes}</p>}
-          {r.extras && r.extras.length > 0 && (
+          {r.extras && r.extras.filter(e => e.name !== '__hide_tolls__').length > 0 && (
             <div>
               <p style={{ margin: '0 0 0.25rem', fontWeight: 600 }}>Extras:</p>
-              {r.extras.map((e, i) => (
+              {r.extras.filter(e => e.name !== '__hide_tolls__').map((e, i) => (
                 <p key={i} style={{ margin: '0 0 0.1rem', color: '#9ca3af' }}>• {e.name} ×{e.quantity ?? 1}</p>
               ))}
             </div>
