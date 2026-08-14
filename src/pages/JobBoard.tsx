@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { dbFetch } from '../lib/supabase';
+import { supabase, dbFetch } from '../lib/supabase';
 import { MapPin, Clock, Users, Car, RefreshCw, CheckCircle } from 'lucide-react';
 import type { DriverCtx } from '../App';
 
@@ -38,23 +38,21 @@ export default function JobBoard({ driver }: { driver: DriverCtx }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch confirmed reservations with no driver_assignment for this or any driver
-      const res = await dbFetch(
-        'reservations?select=id,guest_name,pickup_location,dropoff_location,pickup_datetime,pax,vehicle_type,price_total,notes,status' +
-        '&status=in.(confirmed,assigned)' +
-        `&pickup_datetime=gte.${new Date().toISOString()}` +
-        '&order=pickup_datetime.asc&limit=50'
-      );
-      const all: Reservation[] = await res.json();
+      const { data: all } = await supabase
+        .from('reservations')
+        .select('id,guest_name,pickup_location,dropoff_location,pickup_datetime,pax,vehicle_type,price_total,notes,status')
+        .in('status', ['confirmed', 'assigned'])
+        .gte('pickup_datetime', new Date().toISOString())
+        .order('pickup_datetime', { ascending: true })
+        .limit(50);
 
-      // Job board: rides with no assignment at all
-      const noAssignRes = await dbFetch(
-        'driver_assignments?select=reservation_id&assignment_status=in.(pending,completed)'
-      );
-      const assignedIds: { reservation_id: string }[] = await noAssignRes.json();
-      const assignedSet = new Set(assignedIds.map(a => a.reservation_id));
+      const { data: assignedIds } = await supabase
+        .from('driver_assignments')
+        .select('reservation_id')
+        .in('assignment_status', ['pending', 'completed']);
 
-      setRides(all.filter(r => !assignedSet.has(r.id)));
+      const assignedSet = new Set((assignedIds || []).map((a: any) => a.reservation_id));
+      setRides((all || []).filter((r: any) => !assignedSet.has(r.id)));
     } finally {
       setLoading(false);
     }
