@@ -73,7 +73,7 @@ export default function Integrations({ driver }: { driver: DriverCtx }) {
         .select('reservation_id')
         .eq('driver_id', driver.driverId)
         .limit(50);
-      if (aErr) throw new Error(`DB: ${aErr.code} - ${aErr.message}`);
+      if (aErr) throw new Error(aErr.message);
       if (!assignments?.length) { setSyncMsg('No tienes viajes asignados'); return; }
       let synced = 0;
       for (const a of assignments) {
