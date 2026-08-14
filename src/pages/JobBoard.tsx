@@ -38,21 +38,8 @@ export default function JobBoard({ driver }: { driver: DriverCtx }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data: all } = await supabase
-        .from('reservations')
-        .select('id,guest_name,pickup_location,dropoff_location,pickup_datetime,pax,vehicle_type,price_total,notes,status')
-        .in('status', ['confirmed', 'assigned'])
-        .gte('pickup_datetime', new Date().toISOString())
-        .order('pickup_datetime', { ascending: true })
-        .limit(50);
-
-      const { data: assignedIds } = await supabase
-        .from('driver_assignments')
-        .select('reservation_id')
-        .in('assignment_status', ['pending', 'completed']);
-
-      const assignedSet = new Set((assignedIds || []).map((a: any) => a.reservation_id));
-      setRides((all || []).filter((r: any) => !assignedSet.has(r.id)));
+      const { data, error } = await supabase.rpc('get_available_reservations');
+      if (!error) setRides(data || []);
     } finally {
       setLoading(false);
     }
