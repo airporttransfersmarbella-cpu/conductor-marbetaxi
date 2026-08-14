@@ -5,15 +5,13 @@ import type { DriverCtx } from '../App';
 
 interface Reservation {
   id: string;
-  guest_name: string | null;
   pickup_location: string;
   dropoff_location: string;
   pickup_datetime: string;
   pax: number;
   vehicle_type: string;
-  price_total: number;
   notes: string | null;
-  status: string;
+  extras: { name: string; price: number; quantity?: number }[] | null;
 }
 
 function fmtDate(iso: string) {
@@ -130,12 +128,6 @@ export default function JobBoard({ driver }: { driver: DriverCtx }) {
               {isOpen && (
                 <div style={{ marginTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
 
-                  {r.guest_name && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                      <span style={{ color: '#9ca3af' }}>Pasajero</span>
-                      <span style={{ fontWeight: 600 }}>{r.guest_name}</span>
-                    </div>
-                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                     <span style={{ color: '#9ca3af' }}>Vehículo</span>
                     <span>{VEHICLE_LABELS[r.vehicle_type] || r.vehicle_type}</span>
@@ -144,14 +136,19 @@ export default function JobBoard({ driver }: { driver: DriverCtx }) {
                     <span style={{ color: '#9ca3af' }}>Pasajeros</span>
                     <span>{r.pax} pax</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                    <span style={{ color: '#9ca3af' }}>Precio</span>
-                    <span style={{ color: '#4ade80', fontWeight: 700 }}>{Number(r.price_total).toFixed(2)} €</span>
-                  </div>
+
+                  {r.extras && r.extras.length > 0 && (
+                    <div style={{ fontSize: '0.82rem' }}>
+                      <span style={{ color: '#9ca3af' }}>Extras: </span>
+                      {r.extras.map((e, i) => (
+                        <span key={i} style={{ color: '#e5e7eb' }}>• {e.name}{e.quantity && e.quantity > 1 ? ` ×${e.quantity}` : ''} </span>
+                      ))}
+                    </div>
+                  )}
 
                   {r.notes && (
                     <div style={{ fontSize: '0.8rem', color: '#9ca3af', fontStyle: 'italic', padding: '0.5rem', background: 'rgba(255,255,255,0.04)', borderRadius: 8 }}>
-                      {r.notes}
+                      📝 {r.notes}
                     </div>
                   )}
 
