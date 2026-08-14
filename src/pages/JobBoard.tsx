@@ -39,7 +39,12 @@ export default function JobBoard({ driver }: { driver: DriverCtx }) {
     setLoading(true);
     try {
       const { data, error } = await supabase.rpc('get_available_reservations');
-      if (!error) setRides(data || []);
+      if (error) {
+        console.error('RPC error:', error);
+        setRides([{ id: 'err', guest_name: `Error: ${error.message}`, pickup_location: '', dropoff_location: '', pickup_datetime: '', pax: 0, vehicle_type: '', price_total: 0, notes: null, status: '' } as any]);
+      } else {
+        setRides(data || []);
+      }
     } finally {
       setLoading(false);
     }
