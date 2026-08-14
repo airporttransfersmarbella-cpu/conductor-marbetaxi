@@ -135,7 +135,7 @@ export default function MyRides({ driver }: { driver: DriverCtx }) {
         .eq('driver_id', driver.driverId)
         .in('assignment_status', ['pending', 'completed', 'invoiced'])
         .limit(100);
-      const all: Assignment[] = (data || []).filter((a: any) => a.reservation);
+      const all = ((data || []) as any[]).filter((a: any) => a.reservation).map((a: any) => ({ ...a, reservation: Array.isArray(a.reservation) ? a.reservation[0] : a.reservation })) as unknown as Assignment[];
       setUpcoming(all.filter(a => new Date(a.reservation.pickup_datetime) >= new Date()));
       setPast(all.filter(a => new Date(a.reservation.pickup_datetime) < new Date()));
     } finally {
