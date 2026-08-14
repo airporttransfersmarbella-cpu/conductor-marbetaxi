@@ -129,13 +129,29 @@ export default function MyRides({ driver }: { driver: DriverCtx }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await supabase
-        .from('driver_assignments')
-        .select('id,assignment_status,driver_cost,reservation:reservations(id,guest_name,guest_phone,pickup_location,dropoff_location,pickup_datetime,return_datetime,pax,vehicle_type,flight_number,notes,price_total,payment_method,extras)')
-        .eq('driver_id', driver.driverId)
-        .in('assignment_status', ['pending', 'completed', 'invoiced'])
-        .limit(100);
-      const all = ((data || []) as any[]).filter((a: any) => a.reservation).map((a: any) => ({ ...a, reservation: Array.isArray(a.reservation) ? a.reservation[0] : a.reservation })) as unknown as Assignment[];
+      const { data, error } = await supabase.rpc('get_my_rides');
+      if (error) { console.error('get_my_rides error:', error); return; }
+      const all: Assignment[] = (data || []).map((row: any) => ({
+        id: row.assignment_id,
+        assignment_status: row.assignment_status,
+        driver_cost: row.driver_cost,
+        reservation: {
+          id: row.reservation_id,
+          guest_name: row.guest_name,
+          guest_phone: row.guest_phone,
+          pickup_location: row.pickup_location,
+          dropoff_location: row.dropoff_location,
+          pickup_datetime: row.pickup_datetime,
+          return_datetime: row.return_datetime,
+          pax: row.pax,
+          vehicle_type: row.vehicle_type,
+          flight_number: row.flight_number,
+          notes: row.notes,
+          price_total: row.price_total,
+          payment_method: row.payment_method,
+          extras: row.extras,
+        },
+      }));
       setUpcoming(all.filter(a => new Date(a.reservation.pickup_datetime) >= new Date()));
       setPast(all.filter(a => new Date(a.reservation.pickup_datetime) < new Date()));
     } finally {
