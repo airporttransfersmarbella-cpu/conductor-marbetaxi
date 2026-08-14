@@ -46,17 +46,8 @@ export default function JobBoard({ driver }: { driver: DriverCtx }) {
   async function accept(rideId: string) {
     setAccepting(rideId);
     try {
-      const { error } = await supabase.from('driver_assignments').insert({
-        reservation_id: rideId,
-        driver_id: driver.driverId,
-        assignment_status: 'pending',
-        total_amount: 0,
-        driver_cost: 0,
-        company_commission: 0,
-        locked: false,
-      });
-      if (!error) {
-        await supabase.from('reservations').update({ status: 'assigned' }).eq('id', rideId);
+      const { data, error } = await supabase.rpc('accept_reservation', { p_reservation_id: rideId });
+      if (!error && data?.ok) {
         setDone(d => [...d, rideId]);
         setExpanded(null);
         setTimeout(() => load(), 1500);
