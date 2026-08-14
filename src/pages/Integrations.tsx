@@ -68,17 +68,18 @@ export default function Integrations({ driver }: { driver: DriverCtx }) {
     setSyncing(true);
     setSyncMsg('Sincronizando viajes...');
     try {
-      const res = await dbFetch(
-        `driver_assignments?driver_id=eq.${driver.driverId}` +
-        '&select=reservation(id,pickup_datetime,dropoff_datetime,pickup_location,dropoff_location,pax,guest_name)&limit=50'
-      );
-      const assignments = await res.json();
-      if (!Array.isArray(assignments)) throw new Error('No se pudieron cargar los viajes');
+      const { data: assignments, error: aErr } = await supabase
+        .from('driver_assignments')
+        .select('reservation_id')
+        .eq('driver_id', driver.driverId)
+        .limit(50);
+      if (aErr) throw new Error(aErr.message);
+      if (!assignments?.length) { setSyncMsg('No tienes viajes asignados'); return; }
       let synced = 0;
       for (const a of assignments) {
-        if (!a.reservation?.id) continue;
+        if (!a.reservation_id) continue;
         const { error } = await supabase.functions.invoke('calendar-create-event', {
-          body: { reservation_id: a.reservation.id },
+          body: { reservation_id: a.reservation_id },
         });
         if (!error) synced++;
       }
