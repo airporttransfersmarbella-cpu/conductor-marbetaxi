@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { dbFetch } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { MapPin, Clock, Users, Car, Phone, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import type { DriverCtx } from '../App';
 
@@ -129,15 +129,15 @@ export default function MyRides({ driver }: { driver: DriverCtx }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await dbFetch(
-        `driver_assignments?driver_id=eq.${driver.driverId}` +
-        '&assignment_status=in.(pending,completed,invoiced)' +
-        '&select=id,assignment_status,driver_cost,reservation(id,guest_name,guest_phone,pickup_location,dropoff_location,pickup_datetime,return_datetime,pax,vehicle_type,flight_number,notes,price_total,payment_method,extras)' +
-        '&order=reservation(pickup_datetime).desc&limit=100'
-      );
-      const data: Assignment[] = await res.json();
-      setUpcoming(data.filter(a => a.reservation && new Date(a.reservation.pickup_datetime) >= new Date()));
-      setPast(data.filter(a => a.reservation && new Date(a.reservation.pickup_datetime) < new Date()));
+      const { data } = await supabase
+        .from('driver_assignments')
+        .select('id,assignment_status,driver_cost,reservation:reservations(id,guest_name,guest_phone,pickup_location,dropoff_location,pickup_datetime,return_datetime,pax,vehicle_type,flight_number,notes,price_total,payment_method,extras)')
+        .eq('driver_id', driver.driverId)
+        .in('assignment_status', ['pending', 'completed', 'invoiced'])
+        .limit(100);
+      const all: Assignment[] = (data || []).filter((a: any) => a.reservation);
+      setUpcoming(all.filter(a => new Date(a.reservation.pickup_datetime) >= new Date()));
+      setPast(all.filter(a => new Date(a.reservation.pickup_datetime) < new Date()));
     } finally {
       setLoading(false);
     }
