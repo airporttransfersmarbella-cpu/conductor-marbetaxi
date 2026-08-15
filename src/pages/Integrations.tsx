@@ -68,18 +68,14 @@ export default function Integrations({ driver }: { driver: DriverCtx }) {
     setSyncing(true);
     setSyncMsg('Sincronizando viajes...');
     try {
-      const { data: assignments, error: aErr } = await supabase
-        .from('driver_assignments')
-        .select('reservation_id')
-        .eq('driver_id', driver.driverId)
-        .limit(50);
-      if (aErr) throw new Error(aErr.message);
-      if (!assignments?.length) { setSyncMsg('No tienes viajes asignados'); return; }
+      const { data: rides, error: rErr } = await supabase.rpc('get_my_rides', { p_driver_id: driver.driverId });
+      if (rErr) throw new Error(rErr.message);
+      if (!rides?.length) { setSyncMsg('No tienes viajes asignados'); return; }
       let synced = 0;
-      for (const a of assignments) {
-        if (!a.reservation_id) continue;
+      for (const ride of rides) {
+        if (!ride.reservation_id) continue;
         const { error } = await supabase.functions.invoke('calendar-create-event', {
-          body: { reservation_id: a.reservation_id },
+          body: { reservation_id: ride.reservation_id },
         });
         if (!error) synced++;
       }
