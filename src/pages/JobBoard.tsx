@@ -50,6 +50,7 @@ export default function JobBoard({ driver }: { driver: DriverCtx }) {
       if (!error && data?.ok) {
         setDone(d => [...d, rideId]);
         setExpanded(null);
+        supabase.functions.invoke('calendar-create-event', { body: { reservation_id: rideId } });
         setTimeout(() => load(), 1500);
       }
     } finally {
