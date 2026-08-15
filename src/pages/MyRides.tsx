@@ -129,7 +129,7 @@ export default function MyRides({ driver }: { driver: DriverCtx }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_my_rides');
+      const { data, error } = await supabase.rpc('get_my_rides', { p_driver_id: driver.driverId });
       if (error) { console.error('get_my_rides error:', error); return; }
       const all: Assignment[] = (data || []).map((row: any) => ({
         id: row.assignment_id,
