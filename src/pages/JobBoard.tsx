@@ -46,7 +46,7 @@ export default function JobBoard({ driver }: { driver: DriverCtx }) {
   async function accept(rideId: string) {
     setAccepting(rideId);
     try {
-      const { data, error } = await supabase.rpc('accept_reservation', { p_reservation_id: rideId });
+      const { data, error } = await supabase.rpc('accept_reservation', { p_reservation_id: rideId, p_driver_id: driver.driverId });
       if (!error && data?.ok) {
         setDone(d => [...d, rideId]);
         setExpanded(null);
