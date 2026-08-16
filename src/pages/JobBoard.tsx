@@ -30,6 +30,7 @@ export default function JobBoard({ driver }: { driver: DriverCtx }) {
   const [accepting, setAccepting] = useState<string | null>(null);
   const [done, setDone]           = useState<string[]>([]);
   const [expanded, setExpanded]   = useState<string | null>(null);
+  const [acceptError, setAcceptError] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -45,14 +46,15 @@ export default function JobBoard({ driver }: { driver: DriverCtx }) {
 
   async function accept(rideId: string) {
     setAccepting(rideId);
+    setAcceptError('');
     try {
       const { data, error } = await supabase.rpc('accept_reservation', { p_reservation_id: rideId, p_driver_id: driver.driverId });
-      if (!error && data?.ok) {
-        setDone(d => [...d, rideId]);
-        setExpanded(null);
-        supabase.functions.invoke('calendar-create-event', { body: { reservation_id: rideId } });
-        setTimeout(() => load(), 1500);
-      }
+      if (error) { setAcceptError('Error RPC: ' + error.message); return; }
+      if (!data?.ok) { setAcceptError('Error: ' + (data?.error || 'desconocido')); return; }
+      setDone(d => [...d, rideId]);
+      setExpanded(null);
+      supabase.functions.invoke('calendar-create-event', { body: { reservation_id: rideId } });
+      setTimeout(() => load(), 1500);
     } finally {
       setAccepting(null);
     }
@@ -145,6 +147,7 @@ export default function JobBoard({ driver }: { driver: DriverCtx }) {
                   )}
 
                   <div style={{ marginTop: '0.25rem' }}>
+                    {acceptError && <p style={{ color: '#f87171', fontSize: '0.78rem', margin: '0 0 0.5rem' }}>{acceptError}</p>}
                     {accepted ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4ade80', fontSize: '0.85rem' }}>
                         <CheckCircle size={16} /> Viaje aceptado
