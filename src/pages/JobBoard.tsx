@@ -53,7 +53,9 @@ export default function JobBoard({ driver }: { driver: DriverCtx }) {
       if (!data?.ok) { setAcceptError('Error: ' + (data?.error || 'desconocido')); return; }
       setDone(d => [...d, rideId]);
       setExpanded(null);
-      supabase.functions.invoke('calendar-create-event', { body: { reservation_id: rideId } });
+      // Delete old event (if any) then create fresh one
+      supabase.functions.invoke('calendar-delete-event', { body: { reservation_id: rideId } })
+        .then(() => supabase.functions.invoke('calendar-create-event', { body: { reservation_id: rideId } }));
       setTimeout(() => load(), 1500);
     } finally {
       setAccepting(null);
