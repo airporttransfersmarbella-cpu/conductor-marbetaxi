@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://supabase.gestcab.com';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzc3Mzg0NzY1LCJleHAiOjIwOTI3NDQ3NjV9.7Ns3408AVW2NiX5N1dpEWeOPXwQZRJoaeiWPrdmh4Lg';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzk1MzY2Nzk2LCJleHAiOjIxMTA3MjY3OTZ9.F0EZ019vvJGwNS-oI4_OLird77TJ4S25OInME1kGRKQ';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { autoRefreshToken: true, persistSession: true, flowType: 'pkce' },
