@@ -7,6 +7,7 @@ import MyRides from './pages/MyRides';
 import Billing from './pages/Billing';
 import Integrations from './pages/Integrations';
 import BottomNav from './components/BottomNav';
+import TwoFactorGate from './components/TwoFactorGate';
 
 export type Tab = 'jobboard' | 'myrides' | 'billing' | 'integrations';
 
@@ -59,6 +60,9 @@ export default function App() {
 
   if (loading) return <Spinner />;
   if (!session) return <Login />;
+  return <TwoFactorGate key={session.user.id}>{renderApp()}</TwoFactorGate>;
+
+  function renderApp() {
   if (driverError) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', padding: '2rem', gap: '1rem', textAlign: 'center' }}>
       <p style={{ color: '#f87171', maxWidth: 300 }}>{driverError}</p>
@@ -76,6 +80,7 @@ export default function App() {
       <BottomNav tab={tab} setTab={setTab} />
     </div>
   );
+  }
 }
 
 function Spinner() {
