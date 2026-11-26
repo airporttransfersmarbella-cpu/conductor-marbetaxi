@@ -38,3 +38,12 @@ export async function dbFetch(path: string, opts: RequestInit = {}): Promise<Res
     },
   });
 }
+
+export async function fnCall<T = any>(name: string, body: unknown): Promise<{ ok: boolean; status: number; data: T }> {
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${getToken()}` },
+    body: JSON.stringify(body),
+  });
+  return { ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) };
+}
