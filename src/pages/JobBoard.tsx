@@ -55,13 +55,14 @@ export default function JobBoard({ driver }: { driver: DriverCtx }) {
       setExpanded(null);
       // Delete old conductor event (if any) then create fresh one and store event_id
       supabase.functions.invoke('calendar-delete-event', { body: { reservation_id: rideId, driver_id: driver.driverId } })
-        .then(() => supabase.functions.invoke('calendar-create-event', { body: { reservation_id: rideId } }))
+        .then(() => supabase.functions.invoke('calendar-create-event', { body: { reservation_id: rideId, conductor_only: true } }))
         .then(({ data }) => {
           if (data?.event_id) {
             supabase.from('driver_assignments')
               .update({ calendar_event_id: data.event_id })
               .eq('reservation_id', rideId)
-              .eq('driver_id', driver.driverId);
+              .eq('driver_id', driver.driverId)
+              .then(() => {});
           }
         });
       setTimeout(() => load(), 1500);
